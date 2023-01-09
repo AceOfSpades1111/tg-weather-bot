@@ -2,6 +2,7 @@ package com.serj.openweather.current;
 
 import java.util.List;
 
+// TODO check what fields required
 public record CurrentWeather(Coordinate coord,
                              List<Weather> weather,
                              String base,

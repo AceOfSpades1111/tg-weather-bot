@@ -4,5 +4,5 @@ telegram:
     token: 873668652:AAEEp-iJfxHO17cNmFTDAFNWf5r7vaiPAwU
 
 open-weather:
-  link: https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=%s
+  link: https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&appid=%s
   api-key: 7b0a92bf3d8a70ebcf466da40444ed89

@@ -1,10 +1,10 @@
 package com.serj;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serj.openweather.current.CurrentWeatherFetcher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
@@ -26,8 +26,14 @@ public class AppConfig {
     }
 
     @Bean
-    public CurrentWeatherFetcher currentWeatherFetcher(@Value("${open-weather.link}") String link,
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+
+    @Bean
+    public CurrentWeatherFetcher currentWeatherFetcher(RestTemplate restTemplate,
+                                                       @Value("${open-weather.link}") String link,
                                                        @Value("${open-weather.api-key}") String apiKey) {
-        return new CurrentWeatherFetcher(link, apiKey);
+        return new CurrentWeatherFetcher(restTemplate, link, apiKey);
     }
 }

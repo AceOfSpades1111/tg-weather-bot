@@ -1,84 +1,103 @@
 package com.serj.openweather.current;
 
-import com.github.tomakehurst.wiremock.client.MappingBuilder;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
-import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.client.ExpectedCount;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestTemplate;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.ok;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
-@WireMockTest
+// TODO maybe something like contract test with openweatherapi
 class CurrentWeatherFetcherTest {
 
-    @Test
-    void simpleStubTesting(WireMockRuntimeInfo wmRuntimeInfo) {
+    private CurrentWeatherFetcher weatherFetcher;
+    private MockRestServiceServer mockServer;
 
-        String responseBody = "{\n" +
-                "  \"coord\": {\n" +
-                "    \"lon\": 10.99,\n" +
-                "    \"lat\": 44.34\n" +
-                "  },\n" +
-                "  \"weather\": [\n" +
-                "    {\n" +
-                "      \"id\": 804,\n" +
-                "      \"main\": \"Clouds\",\n" +
-                "      \"description\": \"overcast clouds\",\n" +
-                "      \"icon\": \"04d\"\n" +
-                "    }\n" +
-                "  ],\n" +
-                "  \"base\": \"stations\",\n" +
-                "  \"main\": {\n" +
-                "    \"temp\": 279.54,\n" +
-                "    \"feels_like\": 278.03,\n" +
-                "    \"temp_min\": 276.07,\n" +
-                "    \"temp_max\": 282.64,\n" +
-                "    \"pressure\": 1017,\n" +
-                "    \"humidity\": 87,\n" +
-                "    \"sea_level\": 1017,\n" +
-                "    \"grnd_level\": 930\n" +
-                "  },\n" +
-                "  \"visibility\": 10000,\n" +
-                "  \"wind\": {\n" +
-                "    \"speed\": 2.11,\n" +
-                "    \"deg\": 168,\n" +
-                "    \"gust\": 5.52\n" +
-                "  },\n" +
-                "  \"clouds\": {\n" +
-                "    \"all\": 100\n" +
-                "  },\n" +
-                "  \"dt\": 1673167259,\n" +
-                "  \"sys\": {\n" +
-                "    \"type\": 2,\n" +
-                "    \"id\": 2004688,\n" +
-                "    \"country\": \"IT\",\n" +
-                "    \"sunrise\": 1673160680,\n" +
-                "    \"sunset\": 1673193201\n" +
-                "  },\n" +
-                "  \"timezone\": 3600,\n" +
-                "  \"id\": 3163858,\n" +
-                "  \"name\": \"Zocca\",\n" +
-                "  \"cod\": 200\n" +
-                "}";
-        String apiUrl = "https://api.openweathermap.org/data/2.5/weather?lat=44.34&lon=10.99&appid=7b0a92bf3d8a70ebcf466da40444ed89";
-
-        //Define stub
-        stubFor(WireMock.get(apiUrl).willReturn(ok(responseBody)));
-
-        //Hit API and check response
-        String apiResponse = getContent(apiUrl);
-        System.out.println(apiResponse);
-        assertEquals(apiResponse, responseBody);
-
-        //Verify API is hit
+    @BeforeEach
+    void init() {
+        RestTemplate restTemplate = new RestTemplate();
+        weatherFetcher = new CurrentWeatherFetcher(restTemplate,
+                "https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&appid=%s",
+                "7b0a92bf3d8a70ebcf466da40444ed89");
+        mockServer = MockRestServiceServer.createServer(restTemplate);
     }
 
-    private String getContent(String url) {
+    @Test
+    void fetch() {
+        mockServer.expect(ExpectedCount.once(),
+                        requestTo("https://api.openweathermap.org/data/2.5/weather?lat=44.34&lon=10.99&appid=7b0a92bf3d8a70ebcf466da40444ed89"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(getResponseBody()));
 
-        TestRestTemplate testRestTemplate = new TestRestTemplate();
-        return testRestTemplate.getForObject(url, String.class);
+        double latitude = 44.34;
+        double longitude = 10.99;
+
+        CurrentWeather currentWeather = weatherFetcher.fetch(longitude, latitude);
+        mockServer.verify();
+
+        assertThat(currentWeather.coord()).satisfies(coordinate -> {
+            assertEquals(longitude, coordinate.lon());
+            assertEquals(latitude, coordinate.lat());
+        });
+    }
+
+    private static String getResponseBody() {
+        return """
+                {
+                  "coord": {
+                    "lon": 10.99,
+                    "lat": 44.34
+                  },
+                  "weather": [
+                    {
+                      "id": 804,
+                      "main": "Clouds",
+                      "description": "overcast clouds",
+                      "icon": "04d"
+                    }
+                  ],
+                  "base": "stations",
+                  "main": {
+                    "temp": 279.54,
+                    "feels_like": 278.03,
+                    "temp_min": 276.07,
+                    "temp_max": 282.64,
+                    "pressure": 1017,
+                    "humidity": 87,
+                    "sea_level": 1017,
+                    "grnd_level": 930
+                  },
+                  "visibility": 10000,
+                  "wind": {
+                    "speed": 2.11,
+                    "deg": 168,
+                    "gust": 5.52
+                  },
+                  "clouds": {
+                    "all": 100
+                  },
+                  "dt": 1673167259,
+                  "sys": {
+                    "type": 2,
+                    "id": 2004688,
+                    "country": "IT",
+                    "sunrise": 1673160680,
+                    "sunset": 1673193201
+                  },
+                  "timezone": 3600,
+                  "id": 3163858,
+                  "name": "Zocca",
+                  "cod": 200
+                }""";
     }
 }
