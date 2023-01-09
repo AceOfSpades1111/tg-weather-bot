@@ -17,10 +17,20 @@
         <java.version>17</java.version>
         <spring-cloud.version>2022.0.0</spring-cloud.version>
     </properties>
+
     <dependencies>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+
+            <!-- TODO vulnerable dependency maven:org.yaml:snakeyaml -->
+            <!--<exclusions>
+                <exclusion>
+                    <groupId>org.yaml</groupId>
+                    <artifactId>snakeyaml</artifactId>
+                </exclusion>
+            </exclusions>-->
         </dependency>
 
         <dependency>
@@ -34,6 +44,14 @@
             <groupId>org.telegram</groupId>
             <artifactId>telegrambots</artifactId>
             <version>6.4.0</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.assertj/assertj-core -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.24.1</version>
+            <scope>test</scope>
         </dependency>
 
         <!--<dependency>
