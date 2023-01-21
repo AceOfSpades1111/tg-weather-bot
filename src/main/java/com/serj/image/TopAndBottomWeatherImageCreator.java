@@ -9,9 +9,11 @@ import java.util.Map;
 
 public class TopAndBottomWeatherImageCreator implements WeatherImageCreator {
 
+    // TODO maybe path to icons more generic
     private static final String WEATHER_IMAGES_DIR_PATH = "src\\main\\resources\\images\\weatherCondition\\512\\";
     private static final Map<String, File> WEATHER_IMAGES_BY_ICON = new HashMap<>();
 
+    // TODO add some preconditions on icon mapping
     static {
         WEATHER_IMAGES_BY_ICON.put("01d", weatherImageFile("day_clear.png"));
         WEATHER_IMAGES_BY_ICON.put("02d", weatherImageFile("day_partial_cloud.png"));
@@ -37,7 +39,7 @@ public class TopAndBottomWeatherImageCreator implements WeatherImageCreator {
 
     public TopAndBottomWeatherImageCreator(ImageCreator<TopAndBottomTextPosition> imageCreator) {
         this.imageCreator = imageCreator;
-        System.out.println(WEATHER_IMAGES_BY_ICON);
+        //System.out.println(WEATHER_IMAGES_BY_ICON);
     }
 
     @Override
