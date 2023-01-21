@@ -19,4 +19,9 @@ public class ImageCreatorConfiguration {
     public ImageCreator<TopAndBottomTextPosition> imageCreator(Font font) {
         return new TopAndBottomImageCreator(font);
     }
+
+    @Bean
+    public WeatherImageCreator weatherImageCreator(ImageCreator<TopAndBottomTextPosition> imageCreator) {
+        return new TopAndBottomWeatherImageCreator(imageCreator);
+    }
 }
